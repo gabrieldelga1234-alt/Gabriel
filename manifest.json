@@ -1,0 +1,16 @@
+{
+  "short_name": "Gabriel Calc",
+  "name": "Gabriel Calc Pro",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/512x512/0d47a1/ffffff?text=Gabriel",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0d47a1",
+  "background_color": "#e3f2fd"
+}
