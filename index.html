@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Gabriel Calc">
+    <meta name="theme-color" content="#0d47a1">
+    
+    <title>Gabriel Calc Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/512x512/0d47a1/ffffff?text=Gabriel">
+
+    <style>
+        :root { --bg: #e3f2fd; --calc-bg: #0d47a1; --text: #ffffff; --btn-num: #1976d2; --btn-op: #00b0ff; --btn-func: #1565c0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; touch-action: manipulation; }
+        .calc-container { background: var(--calc-bg); padding: 15px; width: 95%; max-width: 360px; border-radius: 0 0 25px 25px; box-shadow: 0 10px 40px rgba(13, 71, 161, 0.4); margin-bottom: 20px; }
+        #display { width: 100%; height: 85px; text-align: right; font-size: 2.5rem; padding: 15px; border: none; border-radius: 15px; background: #e1f5fe; color: #0d47a1; margin-bottom: 20px; font-weight: bold; box-sizing: border-box; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        button { height: 60px; font-size: 1.2rem; border: none; border-radius: 12px; font-weight: bold; color: white; cursor: pointer; transition: transform 0.1s; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
+        button:active { transform: translateY(3px); box-shadow: none; }
+        .num { background: var(--btn-num); }
+        .op { background: var(--btn-op); }
+        .func { background: var(--btn-func); }
+        .clear { background: #ff5252; grid-column: span 2; }
+        .equal { background: #00e676; grid-column: span 2; }
+        .history-panel { width: 90%; max-width: 360px; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); max-height: 200px; overflow-y: auto; }
+        .history-item { border-bottom: 1px solid #eee; padding: 8px 0; font-size: 0.9rem; color: #333; }
+        #splash { position:fixed; top:0; left:0; width:100%; height:100%; background:#0d47a1; display:flex; justify-content:center; align-items:center; z-index:9999; transition: opacity 0.5s; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div id="splash">
+    <div style="text-align:center;">
+        <div style="width:60px; height:60px; border:5px solid #00b0ff; border-top:5px solid transparent; border-radius:50%; animation: spin 1s linear infinite; margin: auto;"></div>
+        <h2 style="color:white; margin-top:20px;">Gabriel Calc</h2>
+    </div>
+</div>
+
+<div class="calc-container">
+    <input type="text" id="display" placeholder="0" readonly>
+    <div class="grid">
+        <button class="func" onclick="pres('Math.sin(')">sin</button>
+        <button class="func" onclick="pres('Math.cos(')">cos</button>
+        <button class="func" onclick="pres('Math.PI')">π</button>
+        <button class="func" onclick="pres('Math.pow(')">xʸ</button>
+        <button class="num" onclick="pres('7')">7</button>
+        <button class="num" onclick="pres('8')">8</button>
+        <button class="num" onclick="pres('9')">9</button>
+        <button class="op" onclick="pres('/')">÷</button>
+        <button class="num" onclick="pres('4')">4</button>
+        <button class="num" onclick="pres('5')">5</button>
+        <button class="num" onclick="pres('6')">6</button>
+        <button class="op" onclick="pres('*')">×</button>
+        <button class="num" onclick="pres('1')">1</button>
+        <button class="num" onclick="pres('2')">2</button>
+        <button class="num" onclick="pres('3')">3</button>
+        <button class="op" onclick="pres('-')">−</button>
+        <button class="num" onclick="pres('0')">0</button>
+        <button class="num" onclick="pres('.')">.</button>
+        <button class="op" onclick="pres(',')">,</button>
+        <button class="op" onclick="pres('+')">+</button>
+        <button class="clear" onclick="limpiar()">BORRAR</button>
+        <button class="equal" onclick="calc()">=</button>
+    </div>
+</div>
+
+<div class="history-panel">
+    <h3 style="margin:0 0 10px 0; font-size: 1rem; color: #0d47a1;">Historial</h3>
+    <div id="hist"></div>
+</div>
+
+<script>
+    const d = document.getElementById('display');
+    const h = document.getElementById('hist');
+
+    // Cargar historial guardado al iniciar
+    window.onload = () => {
+        const saved = JSON.parse(localStorage.getItem('gabriel_hist') || '[]');
+        saved.forEach(item => renderHist(item.ex, item.re));
+        setTimeout(() => { document.getElementById('splash').style.opacity='0'; setTimeout(()=>document.getElementById('splash').style.display='none', 500); }, 1000);
+    };
+
+    function pres(v) { 
+        if (navigator.vibrate) navigator.vibrate(15);
+        d.value += v; 
+    }
+
+    function limpiar() { d.value = ''; }
+
+    function calc() {
+        try {
+            const res = eval(d.value);
+            if (res !== undefined) {
+                saveHist(d.value, res);
+                renderHist(d.value, res);
+                d.value = res;
+            }
+        } catch(e) { d.value = 'Error'; }
+    }
+
+    function renderHist(ex, re) {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `<b>${ex}</b> = ${re}`;
+        h.prepend(div);
+    }
+
+    function saveHist(ex, re) {
+        const saved = JSON.parse(localStorage.getItem('gabriel_hist') || '[]');
+        saved.push({ex, re});
+        localStorage.setItem('gabriel_hist', JSON.stringify(saved.slice(-10)));
+    }
+</script>
+</body>
+</html>
